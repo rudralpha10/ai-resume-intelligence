@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+chromadb
+sentence-transformers==2.2.2
+pdfplumber
+pydantic
+python-multipart
