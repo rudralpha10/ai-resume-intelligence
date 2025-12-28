@@ -18,16 +18,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+import os
+from sentence_transformers import SentenceTransformer
 
-# -------------------- MODEL (LAZY LOAD) --------------------
+# ---------------- MODEL (LAZY LOAD - RAILWAY SAFE) ----------------
 _model = None
 
 def get_model():
     global _model
     if _model is None:
-        # LIGHTWEIGHT MODEL (Render-safe)
-        _model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
+        # Force runtime-only cache (prevents build timeout)
+        os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf"
+        os.environ["HF_HOME"] = "/tmp/hf"
+
+        _model = SentenceTransformer(
+            "sentence-transformers/paraphrase-MiniLM-L3-v2",
+            device="cpu"
+        )
     return _model
+
 
 # -------------------- DB (CHROMA) --------------------
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
