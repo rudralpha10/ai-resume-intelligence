@@ -1,26 +1,33 @@
 import os
+import uuid
 import chromadb
 import pdfplumber
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 from typing import List
-import uuid
+from sentence_transformers import SentenceTransformer
 
 # -------------------- APP --------------------
 app = FastAPI(title="AI Resume Matcher API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For demo / frontend access
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -------------------- MODEL --------------------
-model = SentenceTransformer("all-mpnet-base-v2")
+# -------------------- MODEL (LAZY LOAD) --------------------
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        # LIGHTWEIGHT MODEL (Render-safe)
+        _model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
+    return _model
 
 # -------------------- DB (CHROMA) --------------------
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -40,14 +47,12 @@ def extract_text_from_pdf(file: UploadFile) -> str:
     text = ""
     with pdfplumber.open(file.file) as pdf:
         for page in pdf.pages:
-            if page.extract_text():
-                text += page.extract_text() + "\n"
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
     return text.strip()
 
 def safe_score(distance: float) -> float:
-    """
-    Convert distance → similarity score between 0 and 1
-    """
     if distance is None:
         return 0.0
     score = 1 - distance
@@ -71,6 +76,7 @@ def list_resumes():
 @app.post("/resume/upload")
 async def upload_one(file: UploadFile = File(...)):
     text = extract_text_from_pdf(file)
+    model = get_model()
     embedding = model.encode(text).tolist()
 
     resume_id = f"{os.path.splitext(file.filename)[0]}-{uuid.uuid4().hex[:6]}"
@@ -89,6 +95,7 @@ async def upload_one(file: UploadFile = File(...)):
 # -------- Upload MULTIPLE Resumes --------
 @app.post("/resumes/upload")
 async def upload_multiple(files: List[UploadFile] = File(...)):
+    model = get_model()
     uploaded = []
 
     for file in files:
@@ -114,6 +121,7 @@ def match_resumes(jd: JobDescription):
     if collection.count() == 0:
         return {"matches": []}
 
+    model = get_model()
     jd_embedding = model.encode(jd.text).tolist()
 
     results = collection.query(
@@ -128,7 +136,5 @@ def match_resumes(jd: JobDescription):
             "score": safe_score(dist)
         })
 
-    # Sort by score DESC
     matches.sort(key=lambda x: x["score"], reverse=True)
-
     return {"matches": matches}
