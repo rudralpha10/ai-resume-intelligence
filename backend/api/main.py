@@ -21,21 +21,21 @@ app.add_middleware(
 import os
 from sentence_transformers import SentenceTransformer
 
-# ---------------- MODEL (LAZY LOAD - RAILWAY SAFE) ----------------
 _model = None
 
 def get_model():
     global _model
     if _model is None:
-        # Force runtime-only cache (prevents build timeout)
         os.environ["TRANSFORMERS_CACHE"] = "/tmp/hf"
         os.environ["HF_HOME"] = "/tmp/hf"
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
         _model = SentenceTransformer(
             "sentence-transformers/paraphrase-MiniLM-L3-v2",
             device="cpu"
         )
     return _model
+
 
 
 # -------------------- DB (CHROMA) --------------------
