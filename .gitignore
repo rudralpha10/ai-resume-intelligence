@@ -1,0 +1,44 @@
+# --------------------
+# Python
+# --------------------
+__pycache__/
+venv/
+*.pyc
+
+# --------------------
+# Node / Frontend
+# --------------------
+node_modules/
+dist/
+dist-ssr/
+
+# --------------------
+# Chroma / AI Data
+# --------------------
+backend/data/
+backend/embeddings/
+
+# --------------------
+# Logs
+# --------------------
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --------------------
+# Environment
+# --------------------
+.env
+*.local
+
+# --------------------
+# Editor / OS
+# --------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
