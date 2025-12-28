@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { API_BASE_URL } from "./config";
 
-const API_BASE = "http://127.0.0.1:8000";
+
 
 export default function App() {
   const [files, setFiles] = useState([]);
@@ -23,7 +24,8 @@ export default function App() {
 
     try {
       setStatus("Uploading resume...");
-      const res = await fetch(`${API_BASE}/resume/upload`, {
+      const res = await fetch(`${API_BASE_URL}/resume/upload`, {
+
         method: "POST",
         body: fd,
       });
@@ -51,7 +53,8 @@ export default function App() {
 
     try {
       setStatus("Uploading resumes...");
-      const res = await fetch(`${API_BASE}/resumes/upload`, {
+      const res = await fetch(`${API_BASE_URL}/resumes/upload`, {
+
         method: "POST",
         body: fd,
       });
@@ -79,7 +82,8 @@ export default function App() {
     setStatus("Processing AI embeddings...");
 
     try {
-      const res = await fetch(`${API_BASE}/match`, {
+      const res = await fetch(`${API_BASE_URL}/match`, {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: jd, top_k: 5 }),

@@ -1,7 +1,8 @@
 fastapi
 uvicorn
 chromadb
-sentence-transformers
+sentence-transformers==2.2.2
+torch==2.0.1
 pdfplumber
 pydantic
 python-multipart
