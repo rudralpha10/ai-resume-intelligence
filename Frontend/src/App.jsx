@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { API_BASE_URL } from "./config";
 
-
+const API_BASE = "http://127.0.0.1:8000";
 
 export default function App() {
   const [files, setFiles] = useState([]);
@@ -24,19 +23,18 @@ export default function App() {
 
     try {
       setStatus("Uploading resume...");
-      const res = await fetch(`${API_BASE_URL}/resume/upload`, {
-
+      const res = await fetch(`${API_BASE}/resume/upload`, {
         method: "POST",
         body: fd,
       });
 
       const data = await res.json();
       alert(data.message || "Resume uploaded");
-    } catch {
+      setStatus("");
+    } catch (err) {
       alert("Upload failed");
+      setStatus("");
     }
-
-    setStatus("");
   };
 
   // ----------------------------
@@ -53,19 +51,18 @@ export default function App() {
 
     try {
       setStatus("Uploading resumes...");
-      const res = await fetch(`${API_BASE_URL}/resumes/upload`, {
-
+      const res = await fetch(`${API_BASE}/resumes/upload`, {
         method: "POST",
         body: fd,
       });
 
       const data = await res.json();
       alert(data.message || "Resumes uploaded");
-    } catch {
+      setStatus("");
+    } catch (err) {
       alert("Upload failed");
+      setStatus("");
     }
-
-    setStatus("");
   };
 
   // ----------------------------
@@ -82,8 +79,7 @@ export default function App() {
     setStatus("Processing AI embeddings...");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/match`, {
-
+      const res = await fetch(`${API_BASE}/match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: jd, top_k: 5 }),
@@ -96,7 +92,7 @@ export default function App() {
       } else {
         setMatches(data.matches);
       }
-    } catch {
+    } catch (err) {
       alert("Matching failed");
     }
 
@@ -106,10 +102,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#020b2d] to-black flex items-center justify-center text-white">
+
+      {/* Card */}
       <div className="relative w-[560px] rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_60px_rgba(59,130,246,0.15)] p-8">
 
+        {/* Glow */}
         <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-blue-500/20 via-indigo-500/10 to-cyan-500/20 blur-2xl" />
 
+        {/* Header */}
         <h1 className="text-3xl font-bold text-center mb-2 tracking-wide">
           🚀 AI Resume Intelligence
         </h1>
@@ -117,6 +117,7 @@ export default function App() {
           Enterprise-grade Resume Screening Engine
         </p>
 
+        {/* File Upload */}
         <label className="block mb-3 text-sm text-gray-300">
           Upload Resumes
         </label>
@@ -132,6 +133,7 @@ export default function App() {
           cursor-pointer"
         />
 
+        {/* Upload Buttons */}
         <div className="flex gap-3 mb-6">
           <button
             onClick={uploadOne}
@@ -147,6 +149,7 @@ export default function App() {
           </button>
         </div>
 
+        {/* JD Input */}
         <label className="block mb-2 text-sm text-gray-300">
           Job Description
         </label>
@@ -158,6 +161,7 @@ export default function App() {
           className="w-full p-3 mb-5 rounded-lg bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
+        {/* Match Button */}
         <button
           onClick={matchJD}
           className="w-full bg-green-600 hover:bg-green-700 transition rounded-lg py-3 font-semibold tracking-wide"
@@ -165,12 +169,14 @@ export default function App() {
           Match Job Description
         </button>
 
+        {/* Status */}
         {(loading || status) && (
           <p className="text-center mt-4 text-blue-400 animate-pulse">
             {status || "Processing..."}
           </p>
         )}
 
+        {/* Results */}
         {matches.length > 0 && (
           <div className="mt-6">
             <h2 className="text-lg font-semibold mb-3">
@@ -178,38 +184,31 @@ export default function App() {
             </h2>
 
             <div className="space-y-3">
-              {matches.map((m, i) => {
-                // ✅ NORMALIZATION (IMPORTANT FIX)
-                const normalizedScore = Math.max(
-                  0,
-                  Math.min(100, m.score * 100)
-                );
-
-                return (
-                  <div
-                    key={i}
-                    className="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition"
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium">{m.resume_id}</span>
-                      <span className="text-blue-400 font-semibold">
-                        {normalizedScore.toFixed(1)}%
-                      </span>
-                    </div>
-
-                    <div className="h-2 bg-gray-700 rounded">
-                      <div
-                        className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded transition-all duration-500"
-                        style={{ width: `${normalizedScore}%` }}
-                      />
-                    </div>
+              {matches.map((m, i) => (
+                <div
+                  key={i}
+                  className="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium">{m.resume_id}</span>
+                    <span className="text-blue-400 font-semibold">
+                      {(m.score * 100).toFixed(1)}%
+                    </span>
                   </div>
-                );
-              })}
+
+                  <div className="h-2 bg-gray-700 rounded">
+                    <div
+                      className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded"
+                      style={{ width: `${m.score * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
+        {/* Empty */}
         {!loading && matches.length === 0 && (
           <p className="text-center mt-6 text-gray-500">
             Upload resumes and match with a job description
